@@ -1,81 +1,45 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { API_URL } from '@/lib/api'; // <-- add this line
 
 export type UserRole = 'student' | 'admin';
 
-export interface User {
+interface User {
   id: string;
   name: string;
   email: string;
-  collegeId?: string;
   role: UserRole;
-  profilePicture?: string;
-  dietGoals?: {
-    targetCalories: number;
-    protein: number;
-    carbs: number;
-    fats: number;
-  };
+  collegeId?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  isLoading: boolean;
   login: (email: string, password: string, role: UserRole) => Promise<void>;
   signup: (name: string, email: string, password: string, role: UserRole, collegeId?: string) => Promise<void>;
   logout: () => void;
-  updateProfile: (updates: Partial<User>) => void;
-  isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // Check if user is logged in from localStorage
-    const savedUser = localStorage.getItem('messmate-user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
-  }, []);
+  // Remove the old API_URL line
 
   const login = async (email: string, password: string, role: UserRole) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock user data
-      const mockUser: User = {
-        id: '1',
-        name: role === 'student' ? 'John Doe' : 'Admin User',
-        email,
-        collegeId: role === 'student' ? 'CS2024001' : undefined,
-        role,
-        profilePicture: `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face`,
-        dietGoals: role === 'student' ? {
-          targetCalories: 2000,
-          protein: 150,
-          carbs: 250,
-          fats: 67
-        } : undefined
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('messmate-user', JSON.stringify(mockUser));
-    } catch (error) {
-      throw new Error('Login failed');
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Login failed');
+      setUser(data.user);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
     } finally {
       setIsLoading(false);
     }
@@ -84,28 +48,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string, role: UserRole, collegeId?: string) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newUser: User = {
-        id: Date.now().toString(),
-        name,
-        email,
-        collegeId: role === 'student' ? collegeId : undefined,
-        role,
-        profilePicture: `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face`,
-        dietGoals: role === 'student' ? {
-          targetCalories: 2000,
-          protein: 150,
-          carbs: 250,
-          fats: 67
-        } : undefined
-      };
-      
-      setUser(newUser);
-      localStorage.setItem('messmate-user', JSON.stringify(newUser));
-    } catch (error) {
-      throw new Error('Signup failed');
+      const res = await fetch(`${API_URL}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role, collegeId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Signup failed');
+      setUser(data.user);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
     } finally {
       setIsLoading(false);
     }
@@ -113,27 +65,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('messmate-user');
-  };
-
-  const updateProfile = (updates: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-      localStorage.setItem('messmate-user', JSON.stringify(updatedUser));
-    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      login,
-      signup,
-      logout,
-      updateProfile,
-      isLoading
-    }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

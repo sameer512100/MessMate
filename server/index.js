@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');   
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -15,6 +16,10 @@ mongoose.connect(process.env.MONGODB_URI)
     console.error('MongoDB connection error:', err);
   });
 
+app.use(cors());
+app.use(express.json());
+
+app.use('/api/auth', require('./routes/auth'));
 
 app.get('/', (req, res) => {
   res.send('BACKEND STARTED');

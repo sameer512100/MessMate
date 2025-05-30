@@ -15,6 +15,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 export const Auth: React.FC = () => {
   const { user, login, signup, isLoading } = useAuth();
   const { toast } = useToast();
+
+  
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
