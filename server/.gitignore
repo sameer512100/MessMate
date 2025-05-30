@@ -1,0 +1,36 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / IDE junk
+.DS_Store
+Thumbs.db
+
+# Editor configs
+.vscode/
+.idea/
+
+# Coverage reports
+coverage/
+
+# Build files
+dist/
+build/
+
+# Optional: PM2 logs
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Optional: dotenv backups
+.env.*
