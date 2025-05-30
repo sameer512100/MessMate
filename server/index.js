@@ -20,6 +20,9 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
+// ...existing code...
+app.use('/api/menu', require('./routes/menu'));
+// ...existing code...
 
 app.get('/', (req, res) => {
   res.send('BACKEND STARTED');
