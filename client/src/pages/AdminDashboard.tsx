@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,45 +12,17 @@ import { Plus, Edit, Trash2, BarChart3, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MenuItem } from './StudentDashboard';
 
-const mockMenuItems: MenuItem[] = [
-  {
-    id: '1',
-    name: 'Masala Dosa',
-    description: 'Crispy South Indian crepe with spiced potato filling',
-    mealType: 'breakfast',
-    calories: 350,
-    protein: 12,
-    carbs: 55,
-    fats: 8,
-    image: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=300&h=200&fit=crop',
-    ingredients: ['Rice', 'Lentils', 'Potatoes', 'Onions', 'Spices'],
-    votes: { upvotes: 24, downvotes: 3 }
-  },
-  {
-    id: '2',
-    name: 'Rajma Rice',
-    description: 'Kidney bean curry served with steamed rice',
-    mealType: 'lunch',
-    calories: 420,
-    protein: 18,
-    carbs: 65,
-    fats: 8,
-    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=300&h=200&fit=crop',
-    ingredients: ['Kidney beans', 'Rice', 'Tomatoes', 'Onions', 'Garam masala'],
-    votes: { upvotes: 32, downvotes: 5 }
-  }
-];
-
 export const AdminDashboard: React.FC = () => {
   const { toast } = useToast();
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(mockMenuItems);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-  
+
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
     mealType: 'breakfast' as 'breakfast' | 'lunch' | 'dinner',
+    day: 'Monday',
     calories: 0,
     protein: 0,
     carbs: 0,
@@ -61,11 +33,25 @@ export const AdminDashboard: React.FC = () => {
 
   const [currentIngredient, setCurrentIngredient] = useState('');
 
+  // Fetch menu items from backend and map _id to id
+  useEffect(() => {
+    axios.get('/api/menu')
+      .then(res => {
+        const items = res.data.map((item: any) => ({
+          ...item,
+          id: item._id,
+        }));
+        setMenuItems(items);
+      })
+      .catch(() => setMenuItems([]));
+  }, []);
+
   const resetForm = () => {
     setNewItem({
       name: '',
       description: '',
       mealType: 'breakfast',
+      day: 'Monday',
       calories: 0,
       protein: 0,
       carbs: 0,
@@ -93,7 +79,8 @@ export const AdminDashboard: React.FC = () => {
     }));
   };
 
-  const handleAddItem = () => {
+  // Add or update menu item (POST/PUT) with token
+  const handleAddItem = async () => {
     if (!newItem.name.trim()) {
       toast({
         title: "Name required",
@@ -103,26 +90,36 @@ export const AdminDashboard: React.FC = () => {
       return;
     }
 
-    const item: MenuItem = {
-      id: editingItem ? editingItem.id : Date.now().toString(),
-      ...newItem,
-      image: newItem.image || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop',
-      votes: editingItem ? editingItem.votes : { upvotes: 0, downvotes: 0 }
-    };
-
-    if (editingItem) {
-      setMenuItems(prev => prev.map(menuItem => 
-        menuItem.id === editingItem.id ? item : menuItem
-      ));
+    const token = localStorage.getItem('token');
+    try {
+      if (editingItem) {
+        // Update
+        const res = await axios.put(`/api/menu/${editingItem.id}`, newItem, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setMenuItems(prev => prev.map(menuItem =>
+          menuItem.id === editingItem.id ? { ...res.data, id: res.data._id } : menuItem
+        ));
+        toast({
+          title: "Menu item updated",
+          description: `${newItem.name} has been updated successfully.`,
+        });
+      } else {
+        // Add
+        const res = await axios.post('/api/menu', newItem, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setMenuItems(prev => [...prev, { ...res.data, id: res.data._id }]);
+        toast({
+          title: "Menu item added",
+          description: `${newItem.name} has been added to the menu.`,
+        });
+      }
+    } catch {
       toast({
-        title: "Menu item updated",
-        description: `${item.name} has been updated successfully.`,
-      });
-    } else {
-      setMenuItems(prev => [...prev, item]);
-      toast({
-        title: "Menu item added",
-        description: `${item.name} has been added to the menu.`,
+        title: "Error",
+        description: "Failed to save menu item.",
+        variant: "destructive",
       });
     }
 
@@ -136,6 +133,7 @@ export const AdminDashboard: React.FC = () => {
       name: item.name,
       description: item.description,
       mealType: item.mealType,
+      day: (item as any).day || 'Monday',
       calories: item.calories,
       protein: item.protein,
       carbs: item.carbs,
@@ -147,12 +145,25 @@ export const AdminDashboard: React.FC = () => {
     setIsAddingItem(true);
   };
 
-  const handleDeleteItem = (id: string) => {
-    setMenuItems(prev => prev.filter(item => item.id !== id));
-    toast({
-      title: "Menu item deleted",
-      description: "The menu item has been removed from the menu.",
-    });
+  // Delete menu item (DELETE) with token
+  const handleDeleteItem = async (id: string) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.delete(`/api/menu/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMenuItems(prev => prev.filter(item => item.id !== id));
+      toast({
+        title: "Menu item deleted",
+        description: "The menu item has been removed from the menu.",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to delete menu item.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,7 +221,6 @@ export const AdminDashboard: React.FC = () => {
                           placeholder="Enter item name"
                         />
                       </div>
-                      
                       <div className="space-y-2">
                         <Label htmlFor="meal-type">Meal Type</Label>
                         <Select value={newItem.mealType} onValueChange={(value) => setNewItem(prev => ({ ...prev, mealType: value as any }))}>
@@ -224,8 +234,21 @@ export const AdminDashboard: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      {/* Day selection */}
+                      <div className="space-y-2">
+                        <Label htmlFor="day">Day</Label>
+                        <Select value={newItem.day} onValueChange={day => setNewItem(prev => ({ ...prev, day }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day => (
+                              <SelectItem key={day} value={day}>{day}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
                       <Textarea
@@ -235,7 +258,6 @@ export const AdminDashboard: React.FC = () => {
                         placeholder="Enter item description"
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label>Ingredients</Label>
                       <div className="flex gap-2">
@@ -266,7 +288,6 @@ export const AdminDashboard: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="calories">Calories</Label>
@@ -278,7 +299,6 @@ export const AdminDashboard: React.FC = () => {
                           min="0"
                         />
                       </div>
-                      
                       <div className="space-y-2">
                         <Label htmlFor="protein">Protein (g)</Label>
                         <Input
@@ -289,7 +309,6 @@ export const AdminDashboard: React.FC = () => {
                           min="0"
                         />
                       </div>
-                      
                       <div className="space-y-2">
                         <Label htmlFor="carbs">Carbs (g)</Label>
                         <Input
@@ -300,7 +319,6 @@ export const AdminDashboard: React.FC = () => {
                           min="0"
                         />
                       </div>
-                      
                       <div className="space-y-2">
                         <Label htmlFor="fats">Fats (g)</Label>
                         <Input
@@ -312,7 +330,6 @@ export const AdminDashboard: React.FC = () => {
                         />
                       </div>
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor="image-upload">Item Image</Label>
                       <div className="flex items-center gap-4">
@@ -334,7 +351,6 @@ export const AdminDashboard: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    
                     <div className="flex gap-2">
                       <Button onClick={handleAddItem}>
                         {editingItem ? 'Update Item' : 'Add Item'}
@@ -344,7 +360,6 @@ export const AdminDashboard: React.FC = () => {
                   </CardContent>
                 </Card>
               )}
-              
               <div className="space-y-4">
                 {menuItems.map((item) => (
                   <Card key={item.id}>
@@ -355,7 +370,6 @@ export const AdminDashboard: React.FC = () => {
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-lg"
                         />
-                        
                         <div className="flex-1 space-y-2">
                           <div className="flex items-start justify-between">
                             <div>
@@ -380,18 +394,17 @@ export const AdminDashboard: React.FC = () => {
                               </Button>
                             </div>
                           </div>
-                          
                           <div className="flex flex-wrap gap-2">
                             <Badge variant="secondary" className="capitalize">{item.mealType}</Badge>
                             <Badge variant="outline">{item.calories} cal</Badge>
                             <Badge variant="outline">P: {item.protein}g</Badge>
                             <Badge variant="outline">C: {item.carbs}g</Badge>
                             <Badge variant="outline">F: {item.fats}g</Badge>
+                            <Badge variant="outline">{(item as any).day || 'Monday'}</Badge>
                           </div>
-                          
                           <div className="flex items-center gap-4">
-                            <span className="text-sm text-green-600">↑ {item.votes.upvotes} upvotes</span>
-                            <span className="text-sm text-red-600">↓ {item.votes.downvotes} downvotes</span>
+                            <span className="text-sm text-green-600">↑ {item.votes?.upvotes || 0} upvotes</span>
+                            <span className="text-sm text-red-600">↓ {item.votes?.downvotes || 0} downvotes</span>
                           </div>
                         </div>
                       </div>
@@ -402,7 +415,6 @@ export const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
         <TabsContent value="feedback" className="space-y-6">
           <Card>
             <CardHeader>
@@ -430,16 +442,16 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="text-center">
-                            <div className="text-lg font-semibold text-green-600">{item.votes.upvotes}</div>
+                            <div className="text-lg font-semibold text-green-600">{item.votes?.upvotes || 0}</div>
                             <div className="text-sm text-muted-foreground">Upvotes</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-semibold text-red-600">{item.votes.downvotes}</div>
+                            <div className="text-lg font-semibold text-red-600">{item.votes?.downvotes || 0}</div>
                             <div className="text-sm text-muted-foreground">Downvotes</div>
                           </div>
                           <div className="text-center">
                             <div className="text-lg font-semibold text-blue-600">
-                              {((item.votes.upvotes / (item.votes.upvotes + item.votes.downvotes)) * 100 || 0).toFixed(0)}%
+                              {((item.votes?.upvotes / ((item.votes?.upvotes || 0) + (item.votes?.downvotes || 0))) * 100 || 0).toFixed(0)}%
                             </div>
                             <div className="text-sm text-muted-foreground">Positive</div>
                           </div>
