@@ -199,30 +199,30 @@ export const AdminDashboard: React.FC = () => {
       : '';
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="animated-gradient-bg min-h-screen max-w-7xl mx-auto p-6 transition-all duration-700">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold drop-shadow-lg">Admin Dashboard</h1>
         <Badge variant="secondary">Administrator</Badge>
       </div>
 
       <Tabs defaultValue="menu" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-2 bg-white/20 backdrop-blur-md rounded-xl shadow-inner animate-fade-in">
           <TabsTrigger value="menu">Menu Management</TabsTrigger>
           <TabsTrigger value="feedback">Feedback & Votes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="menu" className="space-y-6">
-          <Card>
+          <Card className="glass-card animate-fade-in">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Menu Items</CardTitle>
-              <Button onClick={() => setIsAddingItem(true)} className="flex items-center gap-2">
+              <Button onClick={() => setIsAddingItem(true)} className="flex items-center gap-2 gradient-btn">
                 <Plus className="h-4 w-4" />
                 Add New Item
               </Button>
             </CardHeader>
             <CardContent>
               {isAddingItem && (
-                <Card className="mb-6 border-dashed">
+                <Card className="mb-6 border-dashed glass-card animate-fade-in">
                   <CardHeader>
                     <CardTitle className="text-lg">
                       {editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}
@@ -374,7 +374,7 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={handleAddItem}>
+                      <Button onClick={handleAddItem} className="gradient-btn">
                         {editingItem ? 'Update Item' : 'Add Item'}
                       </Button>
                       <Button variant="outline" onClick={handleCancel}>Cancel</Button>
@@ -384,7 +384,7 @@ export const AdminDashboard: React.FC = () => {
               )}
               <div className="space-y-4">
                 {menuItems.map((item) => (
-                  <Card key={item.id}>
+                  <Card key={item.id} className="glass-card animate-fade-in">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
                         <img
@@ -438,7 +438,7 @@ export const AdminDashboard: React.FC = () => {
           </Card>
         </TabsContent>
         <TabsContent value="feedback" className="space-y-6">
-          <Card>
+          <Card className="glass-card animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
@@ -448,7 +448,7 @@ export const AdminDashboard: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 {menuItems.map((item) => (
-                  <Card key={item.id}>
+                  <Card key={item.id} className="glass-card animate-fade-in">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
