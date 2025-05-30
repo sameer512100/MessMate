@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -15,16 +16,18 @@ export const Auth: React.FC = () => {
   const { user, login, signup, isLoading } = useAuth();
   const { toast } = useToast();
 
+  
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  
   // Login form state
   const [loginData, setLoginData] = useState({
     email: '',
     password: '',
     role: 'student' as UserRole
   });
-
+  
   // Signup form state
   const [signupData, setSignupData] = useState({
     name: '',
@@ -58,7 +61,7 @@ export const Auth: React.FC = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (signupData.password !== signupData.confirmPassword) {
       toast({
         title: "Password mismatch",
@@ -99,29 +102,35 @@ export const Auth: React.FC = () => {
   };
 
   return (
-    <div className="animated-gradient-bg flex items-center justify-center min-h-screen p-4 transition-all duration-700">
-      <div className="absolute top-4 right-4 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-green-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      <Card className="w-full max-w-md glass-card animate-fade-in">
+      
+      <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <img src="/favicon.png" alt="MessMate Logo" className="w-14 h-14 object-contain drop-shadow-lg animate-bounce" />
-          </div>
-          <CardTitle className="text-3xl font-extrabold bg-gradient-to-r from-teal-400 via-green-400 to-blue-400 bg-clip-text text-transparent animate-gradient-x">
-            MessMate
-          </CardTitle>
-          <CardDescription>
-            Track your college mess nutrition
-          </CardDescription>
-        </CardHeader>
+  <div className="flex justify-center mb-4">
+    <div >
+      {/* Replace '/logo.png' with your logo file path (place it in /public) */}
+      <img src="/favicon.png" alt="MessMate Logo" className="w-13.5 h-13.5 object-contain" />
+    </div>
+  </div>
+  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-teal-500 to-teal-500 bg-clip-text text-transparent">
+    MessMate
+  </CardTitle>
+  <CardDescription>
+    Track your college mess nutrition
+  </CardDescription>
+</CardHeader>
+        
         <CardContent>
-          <Tabs defaultValue="login" className="w-full tabs-animated">
+          <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            <TabsContent value="login" className="space-y-4 mt-6 animate-fade-in">
+            
+            <TabsContent value="login" className="space-y-4 mt-6">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-role">I am a</Label>
@@ -140,6 +149,7 @@ export const Auth: React.FC = () => {
                     </div>
                   </RadioGroup>
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
@@ -151,6 +161,7 @@ export const Auth: React.FC = () => {
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Password</Label>
                   <div className="relative">
@@ -173,7 +184,8 @@ export const Auth: React.FC = () => {
                     </Button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full gradient-btn" disabled={isLoading}>
+                
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -185,7 +197,8 @@ export const Auth: React.FC = () => {
                 </Button>
               </form>
             </TabsContent>
-            <TabsContent value="signup" className="space-y-4 mt-6 animate-fade-in">
+            
+            <TabsContent value="signup" className="space-y-4 mt-6">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-role">I am a</Label>
@@ -204,6 +217,7 @@ export const Auth: React.FC = () => {
                     </div>
                   </RadioGroup>
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Full Name</Label>
                   <Input
@@ -215,6 +229,7 @@ export const Auth: React.FC = () => {
                     required
                   />
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
@@ -226,6 +241,7 @@ export const Auth: React.FC = () => {
                     required
                   />
                 </div>
+                
                 {signupData.role === 'student' && (
                   <div className="space-y-2">
                     <Label htmlFor="signup-college-id">College ID</Label>
@@ -239,6 +255,7 @@ export const Auth: React.FC = () => {
                     />
                   </div>
                 )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
                   <div className="relative">
@@ -261,6 +278,7 @@ export const Auth: React.FC = () => {
                     </Button>
                   </div>
                 </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="signup-confirm-password">Confirm Password</Label>
                   <div className="relative">
@@ -283,7 +301,8 @@ export const Auth: React.FC = () => {
                     </Button>
                   </div>
                 </div>
-                <Button type="submit" className="w-full gradient-btn" disabled={isLoading}>
+                
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

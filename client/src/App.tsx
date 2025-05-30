@@ -16,6 +16,8 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// ...existing imports...
+
 const AppRoutes = () => {
   const { user } = useAuth();
 
@@ -28,16 +30,8 @@ const AppRoutes = () => {
           <Route 
             path="/" 
             element={
-              <ProtectedRoute>
-                {user?.role === 'student' ? <StudentDashboard /> : <AdminDashboard />}
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile />
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentDashboard />
               </ProtectedRoute>
             } 
           />
@@ -49,12 +43,20 @@ const AppRoutes = () => {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>
   );
-};
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
