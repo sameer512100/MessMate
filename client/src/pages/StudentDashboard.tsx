@@ -28,6 +28,7 @@ export interface MenuItem {
   userVote?: 'up' | 'down' | null;
 }
 
+const backendUrl = "http://localhost:3000";
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const StudentDashboard: React.FC = () => {
@@ -64,43 +65,50 @@ export const StudentDashboard: React.FC = () => {
       .catch(() => setMenuItems([]));
   }, []);
 
+  // Helper for image URLs
+  const getImageUrl = (img: string) =>
+    img
+      ? img.startsWith('http')
+        ? img
+        : backendUrl + img
+      : '';
 
   const currentMenuItems = menuItems.filter(item => item.mealType === selectedMeal && item.day === selectedDay);
 
   const handleVote = async (itemId: string, voteType: 'up' | 'down') => {
-  const token = localStorage.getItem('token');
-  try {
-    const res = await axios.post(
-      `/api/menu/${itemId}/vote`,
-      { vote: voteType },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setMenuItems(prev =>
-      prev.map(item =>
-        item.id === itemId
-          ? {
-              ...item,
-              votes: {
-                upvotes: res.data.upvotes,
-                downvotes: res.data.downvotes,
-              },
-              userVote: res.data.userVote,
-            }
-          : item
-      )
-    );
-    toast({
-      title: "Vote recorded",
-      description: `Your ${voteType}vote has been recorded!`,
-    });
-  } catch (err: any) {
-    toast({
-      title: "Error",
-      description: err?.response?.data?.message || "Failed to vote.",
-      variant: "destructive",
-    });
-  }
-};
+    const token = localStorage.getItem('token');
+    try {
+      const res = await axios.post(
+        `/api/menu/${itemId}/vote`,
+        { vote: voteType },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMenuItems(prev =>
+        prev.map(item =>
+          item.id === itemId
+            ? {
+                ...item,
+                votes: {
+                  upvotes: res.data.upvotes,
+                  downvotes: res.data.downvotes,
+                },
+                userVote: res.data.userVote,
+              }
+            : item
+        )
+      );
+      toast({
+        title: "Vote recorded",
+        description: `Your ${voteType}vote has been recorded!`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.response?.data?.message || "Failed to vote.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleItemSelection = (itemId: string, checked: boolean) => {
     if (checked) {
@@ -181,7 +189,7 @@ export const StudentDashboard: React.FC = () => {
                                 className="mt-1"
                               />
                               <img
-                                src={item.image}
+                                src={getImageUrl(item.image)}
                                 alt={item.name}
                                 className="w-20 h-20 object-cover rounded-lg"
                               />

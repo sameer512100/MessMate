@@ -12,6 +12,8 @@ import { Plus, Edit, Trash2, BarChart3, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MenuItem } from './StudentDashboard';
 
+const backendUrl = "http://localhost:3000";
+
 export const AdminDashboard: React.FC = () => {
   const { toast } = useToast();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -33,7 +35,6 @@ export const AdminDashboard: React.FC = () => {
 
   const [currentIngredient, setCurrentIngredient] = useState('');
 
-  // Fetch menu items from backend and map _id to id
   useEffect(() => {
     axios.get('/api/menu')
       .then(res => {
@@ -79,7 +80,6 @@ export const AdminDashboard: React.FC = () => {
     }));
   };
 
-  // Add or update menu item (POST/PUT) with token
   const handleAddItem = async () => {
     if (!newItem.name.trim()) {
       toast({
@@ -93,7 +93,6 @@ export const AdminDashboard: React.FC = () => {
     const token = localStorage.getItem('token');
     try {
       if (editingItem) {
-        // Update
         const res = await axios.put(`/api/menu/${editingItem.id}`, newItem, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -105,7 +104,6 @@ export const AdminDashboard: React.FC = () => {
           description: `${newItem.name} has been updated successfully.`,
         });
       } else {
-        // Add
         const res = await axios.post('/api/menu', newItem, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -145,7 +143,6 @@ export const AdminDashboard: React.FC = () => {
     setIsAddingItem(true);
   };
 
-  // Delete menu item (DELETE) with token
   const handleDeleteItem = async (id: string) => {
     const token = localStorage.getItem('token');
     try {
@@ -166,11 +163,24 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setNewItem(prev => ({ ...prev, image: imageUrl }));
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await axios.post('/api/menu/upload-image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setNewItem(prev => ({ ...prev, image: res.data.imageUrl }));
+      } catch {
+        toast({
+          title: "Image upload failed",
+          description: "Could not upload image. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -179,6 +189,14 @@ export const AdminDashboard: React.FC = () => {
     setIsAddingItem(false);
     setEditingItem(null);
   };
+
+  // Helper for image URLs
+  const getImageUrl = (img: string) =>
+    img
+      ? img.startsWith('http')
+        ? img
+        : backendUrl + img
+      : '';
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -347,7 +365,11 @@ export const AdminDashboard: React.FC = () => {
                           </label>
                         </Button>
                         {newItem.image && (
-                          <img src={newItem.image} alt="Preview" className="w-12 h-12 object-cover rounded" />
+                          <img
+                            src={getImageUrl(newItem.image)}
+                            alt="Preview"
+                            className="w-12 h-12 object-cover rounded"
+                          />
                         )}
                       </div>
                     </div>
@@ -366,7 +388,7 @@ export const AdminDashboard: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
                         <img
-                          src={item.image}
+                          src={getImageUrl(item.image)}
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-lg"
                         />
@@ -431,7 +453,7 @@ export const AdminDashboard: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <img
-                            src={item.image}
+                            src={getImageUrl(item.image)}
                             alt={item.name}
                             className="w-12 h-12 object-cover rounded"
                           />

@@ -24,6 +24,10 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/menu', require('./routes/menu'));
 // ...existing code...
 
+// ...existing code...
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// ...existing code...
+
 app.get('/', (req, res) => {
   res.send('BACKEND STARTED');
 });
