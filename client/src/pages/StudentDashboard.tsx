@@ -67,40 +67,40 @@ export const StudentDashboard: React.FC = () => {
 
   const currentMenuItems = menuItems.filter(item => item.mealType === selectedMeal && item.day === selectedDay);
 
-  const handleVote = (itemId: string, voteType: 'up' | 'down') => {
-    setMenuItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const currentVote = item.userVote;
-        let newUpvotes = item.votes.upvotes;
-        let newDownvotes = item.votes.downvotes;
-        let newUserVote: 'up' | 'down' | null = voteType;
-
-        // Remove previous vote if exists
-        if (currentVote === 'up') newUpvotes--;
-        if (currentVote === 'down') newDownvotes--;
-
-        // Add new vote if different from current
-        if (currentVote === voteType) {
-          newUserVote = null; // Remove vote if same
-        } else {
-          if (voteType === 'up') newUpvotes++;
-          if (voteType === 'down') newDownvotes++;
-        }
-
-        return {
-          ...item,
-          votes: { upvotes: newUpvotes, downvotes: newDownvotes },
-          userVote: newUserVote
-        };
-      }
-      return item;
-    }));
-
+  const handleVote = async (itemId: string, voteType: 'up' | 'down') => {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await axios.post(
+      `/api/menu/${itemId}/vote`,
+      { vote: voteType },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setMenuItems(prev =>
+      prev.map(item =>
+        item.id === itemId
+          ? {
+              ...item,
+              votes: {
+                upvotes: res.data.upvotes,
+                downvotes: res.data.downvotes,
+              },
+              userVote: res.data.userVote,
+            }
+          : item
+      )
+    );
     toast({
       title: "Vote recorded",
       description: `Your ${voteType}vote has been recorded!`,
     });
-  };
+  } catch (err: any) {
+    toast({
+      title: "Error",
+      description: err?.response?.data?.message || "Failed to vote.",
+      variant: "destructive",
+    });
+  }
+};
 
   const handleItemSelection = (itemId: string, checked: boolean) => {
     if (checked) {

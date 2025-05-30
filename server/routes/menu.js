@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const menuController = require('../controllers/menuControllers');
 const authenticate = require('../middleware/authenticate');
@@ -10,5 +11,9 @@ router.get('/', menuController.getMenuItems);
 router.post('/', authenticate(true), menuController.addMenuItem);
 router.put('/:id', authenticate(true), menuController.updateMenuItem);
 router.delete('/:id', authenticate(true), menuController.deleteMenuItem);
+
+// ...existing code...
+router.post('/:id/vote', authenticate(), menuController.voteMenuItem);
+// ...existing code...
 
 module.exports = router;

@@ -14,7 +14,13 @@ const MenuItemSchema = new mongoose.Schema({
   votes: {
     upvotes: { type: Number, default: 0 },
     downvotes: { type: Number, default: 0 }
-  }
+  },
+  votedBy: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      vote: { type: String, enum: ['up', 'down'] }
+    }
+  ]
 });
 
 module.exports = mongoose.model('MenuItem', MenuItemSchema);
