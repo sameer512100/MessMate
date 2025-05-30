@@ -1,4 +1,6 @@
 const MenuItem = require('../models/MenuItem');
+const User = require('../models/User');
+const path = require('path');
 
 exports.getMenuItems = async (req, res) => {
   const items = await MenuItem.find();
@@ -71,4 +73,5 @@ exports.voteMenuItem = async (req, res) => {
     userVote: item.votedBy.find(v => v.user.toString() === userId)?.vote || null
   });
 };
-// ...existing code...
+
+
