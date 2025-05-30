@@ -1,4 +1,3 @@
-
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,7 +20,9 @@ const Index = () => {
   }
 
   // Redirect based on user role
-  return user.role === 'student' ? <Navigate to="/" replace /> : <Navigate to="/admin" replace />;
+  return user.role === 'student'
+    ? <Navigate to="/" replace />
+    : <Navigate to="/admin" replace />;
 };
 
 export default Index;

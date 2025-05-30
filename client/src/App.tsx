@@ -16,8 +16,6 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// ...existing imports...
-
 const AppRoutes = () => {
   const { user } = useAuth();
 
@@ -26,31 +24,40 @@ const AppRoutes = () => {
       {user && <Navbar />}
       <main className={user ? "pt-0" : ""}>
         <Routes>
+          {/* Public Route */}
           <Route path="/auth" element={<Auth />} />
-          <Route 
-            path="/" 
+
+          {/* Student Dashboard (only for students) */}
+          <Route
+            path="/"
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/admin" 
+
+          {/* Admin Dashboard (only for admins) */}
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboard />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/profile" 
+
+          {/* Profile (any logged-in user) */}
+          <Route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <Profile />
               </ProtectedRoute>
-            } 
+            }
           />
+
+          {/* Catch-all for 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
