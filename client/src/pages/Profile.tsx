@@ -3,13 +3,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, Upload, Save } from 'lucide-react';
+import { User as LucideUser } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { ProfilePictureUploader } from '@/components/ProfilePictureUploader';
+
+// Extend User type to include dietGoals if not already present
+type DietGoals = {
+  targetCalories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+};
+
+// Define UserWithDietGoals type
+type UserWithDietGoals = {
+  name: string;
+  email: string;
+  collegeId?: string;
+  role: string;
+  dietGoals?: DietGoals;
+  profilePicture?: string;
+};
 
 const backendUrl = "http://localhost:3000";
 
@@ -25,31 +42,73 @@ export const Profile: React.FC = () => {
   });
 
   const [dietGoals, setDietGoals] = useState({
-    targetCalories: user?.dietGoals?.targetCalories || 2000,
-    protein: user?.dietGoals?.protein || 150,
-    carbs: user?.dietGoals?.carbs || 250,
-    fats: user?.dietGoals?.fats || 67,
+    targetCalories: (user as UserWithDietGoals)?.dietGoals?.targetCalories || 2000,
+    protein: (user as UserWithDietGoals)?.dietGoals?.protein || 150,
+    carbs: (user as UserWithDietGoals)?.dietGoals?.carbs || 250,
+    fats: (user as UserWithDietGoals)?.dietGoals?.fats || 67,
   });
 
-  const [profilePicture, setProfilePicture] = useState(user?.profilePicture);
+  const [profilePicture, setProfilePicture] = useState((user as UserWithDietGoals | null)?.profilePicture);
 
   useEffect(() => {
-    setProfilePicture(user?.profilePicture);
-  }, [user?.profilePicture]);
+    setProfilePicture((user as UserWithDietGoals | null)?.profilePicture);
+  }, [user]);
+
+  useEffect(() => {
+    setProfileData({
+      name: user?.name || '',
+      email: user?.email || '',
+      collegeId: user?.collegeId || '',
+    });
+    setDietGoals({
+      targetCalories: (user as UserWithDietGoals)?.dietGoals?.targetCalories || 2000,
+      protein: (user as UserWithDietGoals)?.dietGoals?.protein || 150,
+      carbs: (user as UserWithDietGoals)?.dietGoals?.carbs || 250,
+      fats: (user as UserWithDietGoals)?.dietGoals?.fats || 67,
+    });
+  }, [user]);
 
   if (!user) return null;
 
-  const handleSaveProfile = () => {
-    updateProfile({
-      ...profileData,
-      dietGoals: user.role === 'student' ? dietGoals : undefined,
-    });
-
-    setIsEditing(false);
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been successfully updated.",
-    });
+  const handleSaveProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...profileData,
+          dietGoals: user.role === 'student' ? dietGoals : undefined,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to update profile');
+      const updated = await res.json();
+      setProfileData({
+        name: updated.name,
+        email: updated.email,
+        collegeId: updated.collegeId,
+      });
+      setDietGoals({
+        targetCalories: updated.dietGoals?.targetCalories || 2000,
+        protein: updated.dietGoals?.protein || 150,
+        carbs: updated.dietGoals?.carbs || 250,
+        fats: updated.dietGoals?.fats || 67,
+      });
+      setIsEditing(false);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+      if (updateProfile) updateProfile(updated);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Could not update profile.",
+      });
+    }
   };
 
   return (
@@ -66,7 +125,7 @@ export const Profile: React.FC = () => {
         <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
+              <LucideUser className="h-5 w-5" />
               Profile Picture
             </CardTitle>
           </CardHeader>
@@ -76,7 +135,6 @@ export const Profile: React.FC = () => {
                 current={profilePicture}
                 onUpload={url => {
                   setProfilePicture(url);
-                  updateProfile({ profilePicture: url });
                   toast({
                     title: "Profile picture updated",
                     description: "Your profile picture has been updated successfully.",
@@ -90,6 +148,87 @@ export const Profile: React.FC = () => {
                   <p className="text-sm text-muted-foreground">ID: {user.collegeId}</p>
                 )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Editable Profile Info */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Edit Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                handleSaveProfile();
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    value={profileData.name}
+                    onChange={e => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={e => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="collegeId">College ID</Label>
+                  <Input
+                    id="collegeId"
+                    value={profileData.collegeId}
+                    onChange={e => setProfileData(prev => ({ ...prev, collegeId: e.target.value }))}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </div>
+              {/* Move the buttons OUTSIDE the form to prevent accidental submit */}
+            </form>
+            <div className="flex gap-4 mt-4">
+              {!isEditing ? (
+                <Button type="button" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </Button>
+              ) : (
+                <>
+                  <Button type="button" onClick={handleSaveProfile}>
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setProfileData({
+                        name: user?.name || '',
+                        email: user?.email || '',
+                        collegeId: user?.collegeId || '',
+                      });
+                      setDietGoals({
+                        targetCalories: (user as UserWithDietGoals)?.dietGoals?.targetCalories || 2000,
+                        protein: (user as UserWithDietGoals)?.dietGoals?.protein || 150,
+                        carbs: (user as UserWithDietGoals)?.dietGoals?.carbs || 250,
+                        fats: (user as UserWithDietGoals)?.dietGoals?.fats || 67,
+                      });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -114,7 +253,6 @@ export const Profile: React.FC = () => {
                   min="0"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="protein">Protein (g)</Label>
                 <Input
@@ -126,7 +264,6 @@ export const Profile: React.FC = () => {
                   min="0"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="carbs">Carbs (g)</Label>
                 <Input
@@ -138,7 +275,6 @@ export const Profile: React.FC = () => {
                   min="0"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="fats">Fats (g)</Label>
                 <Input
@@ -151,7 +287,6 @@ export const Profile: React.FC = () => {
                 />
               </div>
             </div>
-
             {!isEditing && (
               <>
                 <Separator />

@@ -18,11 +18,11 @@ export function ProfilePictureUploader({ current, onUpload }: { current?: string
 
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${backendUrl}/api/user/profile-picture`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await fetch('/api/user/profile-picture', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+  body: formData,
+});
       const data = await res.json();
       setLoading(false);
       if (data.profilePicture) onUpload(data.profilePicture);

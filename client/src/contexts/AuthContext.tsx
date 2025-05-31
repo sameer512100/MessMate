@@ -1,15 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// ...existing code...
-import { API_URL } from '@/lib/api'; // <-- add this line
+import { API_URL } from '@/lib/api';
 
 export type UserRole = 'student' | 'admin';
 
-interface User {
+export type DietGoals = {
+  targetCalories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+};
+
+export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
   collegeId?: string;
+  profilePicture?: string;
+  dietGoals?: DietGoals;
 }
 
 interface AuthContextType {
@@ -18,11 +26,11 @@ interface AuthContextType {
   login: (email: string, password: string, role: UserRole) => Promise<void>;
   signup: (name: string, email: string, password: string, role: UserRole, collegeId?: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (updated: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-// ...existing code...
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,10 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setIsLoading(false);
   }, []);
-
-  // ...existing code...
-
-  // Remove the old API_URL line
 
   const login = async (email: string, password: string, role: UserRole) => {
     setIsLoading(true);
@@ -82,8 +86,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
   };
 
+  // This function updates the user in context and localStorage
+  const updateProfile = (updated: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const merged = { ...prev, ...updated };
+      localStorage.setItem('user', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
