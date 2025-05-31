@@ -26,7 +26,7 @@ type UserWithDietGoals = {
   profilePicture?: string;
 };
 
-const backendUrl = "http://localhost:3000";
+const backendUrl = "https://messmate-uk3s.onrender.com";
 
 export const Profile: React.FC = () => {
   const { user, updateProfile } = useAuth();

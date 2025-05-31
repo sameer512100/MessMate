@@ -41,7 +41,7 @@ interface MealHistoryEntry {
   totalFats: number;
 }
 
-const backendUrl = "http://localhost:3000";
+const backendUrl = "https://messmate-uk3s.onrender.com";
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const StudentDashboard: React.FC = () => {

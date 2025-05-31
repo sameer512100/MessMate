@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 
-const backendUrl = "http://localhost:3000";
+const backendUrl = "https://messmate-uk3s.onrender.com";
 
 export function ProfilePictureUploader({ current, onUpload }: { current?: string, onUpload: (url: string) => void }) {
   const [preview, setPreview] = useState<string | undefined>(current);

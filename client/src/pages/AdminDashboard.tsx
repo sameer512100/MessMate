@@ -12,7 +12,7 @@ import { Plus, Edit, Trash2, BarChart3, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MenuItem } from './StudentDashboard';
 
-const backendUrl = "http://localhost:3000";
+const backendUrl = "https://messmate-uk3s.onrender.com";
 
 export const AdminDashboard: React.FC = () => {
   const { toast } = useToast();
