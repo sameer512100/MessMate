@@ -184,7 +184,7 @@ export const StudentDashboard: React.FC = () => {
     <div className="animated-gradient-bg min-h-screen max-w-7xl mx-auto p-6 space-y-6 transition-all duration-700">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in">Mess Menu</h1>
+          <h1 className="text-3xl font-bold text-foreground drop-shadow-lg animate-fade-in">VIT Mess Menu</h1>
           <p className="text-muted-foreground mt-1 animate-fade-in">Select your meals and track nutrition</p>
         </div>
       </div>
@@ -386,7 +386,7 @@ export const StudentDashboard: React.FC = () => {
       {activeTab === 'history' && (
         <Card className="glass-card animate-fade-in">
           <CardHeader>
-            <CardTitle>Meal History</CardTitle>
+            <CardTitle>Meal History </CardTitle>
           </CardHeader>
           <CardContent>
             {history.length === 0 ? (
