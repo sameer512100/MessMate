@@ -1,27 +1,26 @@
 const User = require('../models/User');
 
-// Upload profile picture
-exports.uploadProfilePicture = async (req, res) => {
+// Get user profile
+exports.getProfile = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-    const profilePicturePath = `/uploads/${req.file.filename}`;
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { profilePicture: profilePicturePath },
-      { new: true }
-    );
-    res.json({ profilePicture: user.profilePicture });
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      collegeId: user.collegeId,
+      profilePicture: user.profilePicture,
+      dietGoals: user.dietGoals
+    });
   } catch (err) {
-    console.error('Upload error:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Failed to fetch profile', error: err.message });
   }
 };
 
-// ...existing code...
+// Update user profile
 exports.updateProfile = async (req, res) => {
-  console.log("Received profile update request");
   try {
     const userId = req.user.id;
     const { name, email, collegeId, dietGoals } = req.body;
@@ -46,4 +45,22 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Profile update failed', error: err.message });
   }
 };
-// ...existing code...
+
+// Upload profile picture (unchanged)
+exports.uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const profilePicturePath = `/uploads/${req.file.filename}`;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profilePicture: profilePicturePath },
+      { new: true }
+    );
+    res.json({ profilePicture: user.profilePicture });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

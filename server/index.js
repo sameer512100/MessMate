@@ -30,6 +30,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/menu', require('./routes/menu'));
 app.use('/api/user', require('./routes/user'));
 
+app.use('/api/history', require('./routes/mealHistory'));
+
 // Health check/test route
 app.get('/test', (req, res) => res.send('ok'));
 

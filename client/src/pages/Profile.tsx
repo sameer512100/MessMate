@@ -10,7 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { ProfilePictureUploader } from '@/components/ProfilePictureUploader';
 
-// Extend User type to include dietGoals if not already present
 type DietGoals = {
   targetCalories: number;
   protein: number;
@@ -18,7 +17,6 @@ type DietGoals = {
   fats: number;
 };
 
-// Define UserWithDietGoals type
 type UserWithDietGoals = {
   name: string;
   email: string;
@@ -49,6 +47,34 @@ export const Profile: React.FC = () => {
   });
 
   const [profilePicture, setProfilePicture] = useState((user as UserWithDietGoals | null)?.profilePicture);
+
+  // Fetch latest profile from backend on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/user/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const userData = await res.json();
+        setProfileData({
+          name: userData.name,
+          email: userData.email,
+          collegeId: userData.collegeId,
+        });
+        setDietGoals({
+          targetCalories: userData.dietGoals?.targetCalories || 2000,
+          protein: userData.dietGoals?.protein || 150,
+          carbs: userData.dietGoals?.carbs || 250,
+          fats: userData.dietGoals?.fats || 67,
+        });
+        setProfilePicture(userData.profilePicture);
+        if (updateProfile) updateProfile(userData);
+      }
+    };
+    fetchProfile();
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     setProfilePicture((user as UserWithDietGoals | null)?.profilePicture);
@@ -195,7 +221,6 @@ export const Profile: React.FC = () => {
                   />
                 </div>
               </div>
-              {/* Move the buttons OUTSIDE the form to prevent accidental submit */}
             </form>
             <div className="flex gap-4 mt-4">
               {!isEditing ? (

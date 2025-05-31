@@ -1,5 +1,6 @@
 const MenuItem = require('../models/MenuItem');
 const User = require('../models/User');
+const calculateMacros = require('../utils/calculateMacros');
 
 // Get all menu items (public)
 exports.getMenuItems = async (req, res) => {
@@ -14,7 +15,21 @@ exports.getMenuItems = async (req, res) => {
 // Add a new menu item (admin only)
 exports.addMenuItem = async (req, res) => {
   try {
-    const item = new MenuItem(req.body);
+    const { name, day, description, mealType, image, ingredients } = req.body;
+
+    // Calculate macros from ingredients using Meal Planner API
+    const macros = await calculateMacros(ingredients);
+
+    const item = new MenuItem({
+      name,
+      day,
+      description,
+      mealType,
+      image,
+      ingredients,
+      ...macros
+    });
+
     await item.save();
     res.status(201).json(item);
   } catch (err) {

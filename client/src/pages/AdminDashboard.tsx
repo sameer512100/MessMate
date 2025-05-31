@@ -19,16 +19,13 @@ export const AdminDashboard: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
     mealType: 'breakfast' as 'breakfast' | 'lunch' | 'dinner',
     day: 'Monday',
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fats: 0,
     image: '',
     ingredients: [] as string[]
   });
@@ -53,10 +50,6 @@ export const AdminDashboard: React.FC = () => {
       description: '',
       mealType: 'breakfast',
       day: 'Monday',
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fats: 0,
       image: '',
       ingredients: []
     });
@@ -90,6 +83,8 @@ export const AdminDashboard: React.FC = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     const token = localStorage.getItem('token');
     try {
       if (editingItem) {
@@ -121,6 +116,7 @@ export const AdminDashboard: React.FC = () => {
       });
     }
 
+    setIsSubmitting(false);
     resetForm();
     setIsAddingItem(false);
     setEditingItem(null);
@@ -132,10 +128,6 @@ export const AdminDashboard: React.FC = () => {
       description: item.description,
       mealType: item.mealType,
       day: (item as any).day || 'Monday',
-      calories: item.calories,
-      protein: item.protein,
-      carbs: item.carbs,
-      fats: item.fats,
       image: item.image,
       ingredients: [...item.ingredients]
     });
@@ -215,7 +207,14 @@ export const AdminDashboard: React.FC = () => {
           <Card className="glass-card animate-fade-in">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Menu Items</CardTitle>
-              <Button onClick={() => setIsAddingItem(true)} className="flex items-center gap-2 gradient-btn">
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setIsAddingItem(true);
+                  setEditingItem(null);
+                }}
+                className="flex items-center gap-2 gradient-btn"
+              >
                 <Plus className="h-4 w-4" />
                 Add New Item
               </Button>
@@ -307,45 +306,8 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="calories">Calories</Label>
-                        <Input
-                          id="calories"
-                          type="number"
-                          value={newItem.calories}
-                          onChange={(e) => setNewItem(prev => ({ ...prev, calories: parseInt(e.target.value) || 0 }))}
-                          min="0"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="protein">Protein (g)</Label>
-                        <Input
-                          id="protein"
-                          type="number"
-                          value={newItem.protein}
-                          onChange={(e) => setNewItem(prev => ({ ...prev, protein: parseInt(e.target.value) || 0 }))}
-                          min="0"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="carbs">Carbs (g)</Label>
-                        <Input
-                          id="carbs"
-                          type="number"
-                          value={newItem.carbs}
-                          onChange={(e) => setNewItem(prev => ({ ...prev, carbs: parseInt(e.target.value) || 0 }))}
-                          min="0"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="fats">Fats (g)</Label>
-                        <Input
-                          id="fats"
-                          type="number"
-                          value={newItem.fats}
-                          onChange={(e) => setNewItem(prev => ({ ...prev, fats: parseInt(e.target.value) || 0 }))}
-                          min="0"
-                        />
+                      <div className="col-span-4 text-sm text-muted-foreground">
+                        Macros (calories, protein, carbs, fats) will be calculated automatically based on ingredients.
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -374,10 +336,20 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={handleAddItem} className="gradient-btn">
-                        {editingItem ? 'Update Item' : 'Add Item'}
+                      <Button onClick={handleAddItem} className="gradient-btn" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 mr-2 text-white" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                            </svg>
+                            Uploading...
+                          </>
+                        ) : (
+                          editingItem ? 'Update Item' : 'Add Item'
+                        )}
                       </Button>
-                      <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                      <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>Cancel</Button>
                     </div>
                   </CardContent>
                 </Card>
